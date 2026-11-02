@@ -1,0 +1,21 @@
+; Dual-data I2S master: shared BCLK/LRCLK, two data pins (DATA_L = base, DATA_R = base+1)
+; Each "out pins, 2" sends 1 bit to each DAC. 32 bit slot, MSB first, Philips I2S timing
+; side-set: bit1 = LRCLK (BCLK pin + 1), bit0 = BCLK
+; 2 PIO cycles per bit, 64 bits per frame  ->  PIO clock = 128 * Fs
+; 64 bit-times per frame x 2 bits = 128 bits = 4 FIFO words per frame (see main.c)
+
+.program i2s_out
+.side_set 2
+
+.wrap_target
+bitloop0:                       ; left channel, LRCLK = 0
+    out pins, 2        side 0b00
+    jmp x-- bitloop0   side 0b01
+    out pins, 2        side 0b10    ; LSB of left, LRCLK -> 1 (I2S: 1 BCLK before next MSB)
+    set x, 30          side 0b11
+bitloop1:                       ; right channel, LRCLK = 1
+    out pins, 2        side 0b10
+    jmp x-- bitloop1   side 0b11
+    out pins, 2        side 0b00    ; LSB of right, LRCLK -> 0
+    set x, 30          side 0b01
+.wrap
