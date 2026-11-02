@@ -22,4 +22,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: usb_dac_lr
-          path: build/usb_dac_lr.uf2
+          path: build/*.uf2
